@@ -1,4 +1,7 @@
 # jupyter_puppeteer_helpers
+
+[![Build Status](https://travis-ci.org/AaronWatters/jupyter_puppeteer_helpers.svg?branch=master)](https://travis-ci.org/AaronWatters/jupyter_puppeteer_helpers)
+
 Some helpful code for controlling Jupyter from puppeteer using a headless browser.
 
 Although the code does not depend on `jest` and `jest-puppeteer` this repository
