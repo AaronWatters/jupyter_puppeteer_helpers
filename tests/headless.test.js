@@ -3,6 +3,8 @@
 
 const fs = require("fs");
 
+const verbose = true;
+
 describe("headless browser tests", async () => {
     
     it("gets the browser version",  async () => {
@@ -160,10 +162,10 @@ describe("headless browser tests", async () => {
             }
         }
         // debugging...
-        //if (!text_found) {
-        //    console.log("   NOT FOUND");
-        //    console.log(texts[0]);
-        //}
+        if (verbose &&  !text_found) {
+            console.log("   NOT FOUND");
+            console.log(texts[0]);
+        }
         return text_found;
     }
 
