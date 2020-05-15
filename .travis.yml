@@ -24,5 +24,4 @@ before_install:
 install:
 - npm install
 script:
-- python -c "import widget_cookie_cutter_test; print(widget_cookie_cutter_test)"
 - npm test
