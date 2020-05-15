@@ -10,6 +10,7 @@
     "puppeteer": "^3.0.2"
   },
   "devDependencies": {
+    "jest": "^22.4.3",
     "jest-dev-server": "^4.4.0",
     "jest-environment-node": "^22.0.0",
     "jest-puppeteer": "^4.4.0",
