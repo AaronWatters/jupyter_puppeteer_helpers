@@ -10,7 +10,9 @@ var classic_selectors = {
     restart_clear: "#restart_clear_output a",
     restart_run: "#restart_run_all a",
     kernel_dropdown: "#kernellink",
+    file_menu: "#file_menu",
     close_halt: "#close_and_halt a",
+    notification_kernel: "#notification_kernel",
 }
 
 class JupyterContext {
@@ -66,6 +68,20 @@ class ClassicNotebookContext {
         return page;
     };
 
+    wait_for_page_to_close() {
+        // this doesn't work... some security issue prevents the page close
+        var that = this;
+        return new Promise(function(resolve) {
+            that.page.on("close", resolve);
+        })
+    };
+
+    async shut_down_notebook() {
+        await this.find_click_confirm(this.selectors.file_menu, this.selectors.close_halt, this.selectors.confirm);
+        //await this.wait_for_page_to_close();
+        await this.wait_until_there(this.selectors.notification_kernel, "No kernel");
+    };
+
     async restart_and_clear() {
         await this.find_click_confirm(this.selectors.kernel_dropdown, this.selectors.restart_clear, this.selectors.confirm)
     };
@@ -92,7 +108,6 @@ class ClassicNotebookContext {
         if (this.verbose) {
             console.log("  clicked and confirmed " + [button_selector, confirm_selector]);
         }
-        sleep(10000)
     };
 
     async find_and_click(selector) {

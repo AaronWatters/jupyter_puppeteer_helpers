@@ -92,6 +92,8 @@ describe("headless browser tests", async () => {
         await nb_context.wait_until_there(nb_context.selectors.container, secret_label);
         console.log("Verify that test_string appears in widget output")
         await nb_context.wait_until_there(nb_context.selectors.container, test_string);
+        console.log("now shutting down notebook and kernel");
+        await nb_context.shut_down_notebook();
         // success!
         expect(true).toBeTruthy();
     },
