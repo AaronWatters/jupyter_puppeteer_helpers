@@ -17,6 +17,7 @@ the following have been installed in the environment:
 - Python 3 (tested with 3.6)
 - jupyterlab=2.1.2
 - jupyter labextension install @jupyter-widgets/jupyterlab-manager
+- ipywidgets
 
 The test suite was built using these versions:
 

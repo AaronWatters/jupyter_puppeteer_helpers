@@ -23,3 +23,7 @@ def get_a_widget():
     result = widget_cookie_cutter_test.example.HelloWorld()
     result.value = test_string
     display(result)
+
+# Put these at the bottom of the module so they don't show up in import error tracebacks in the notebook
+secret_label = "SECRET BUTTON LABEL"
+test_string = "THIS IS THE SECRET TEST STRING"
