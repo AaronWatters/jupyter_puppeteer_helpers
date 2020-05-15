@@ -2,9 +2,9 @@
   "name": "jupyter_puppeteer_helpers",
   "version": "1.0.0",
   "description": "Some helpful code for controlling Jupyter from puppeteer using a headless browser.",
-  "main": "dist/jp_helpers.js",
+  "main": "src/jp_helpers.js",
   "files": [
-    "dist/jp_helpers.js"
+    "src/jp_helpers.js"
   ],
   "dependencies": {
     "puppeteer": "^3.0.2"

@@ -4,14 +4,23 @@ function jp_helpers_is_loaded() {
     return true;
 }
 
+var classic_selectors = {
+    confirm: "div.modal-dialog button.btn-danger",
+    container: "#notebook-container",
+    restart_clear: "#restart_clear_output a",
+    restart_run: "#restart_run_all a",
+    kernel_dropdown: "#kernellink",
+    close_halt: "#close_and_halt a",
+}
+
 class JupyterContext {
     constructor(url_with_token, browser, verbose) {
         this.verbose = verbose;
         this.url_with_token = url_with_token;
         this.browser = browser;
     };
-    async classic_notebook_context(path) {
-        var context = new ClassicNotebookContext(this, path);
+    async classic_notebook_context(path, verbose) {
+        var context = new ClassicNotebookContext(this, path, classic_selectors, verbose);
         await context.get_page();
         return context;
     };
@@ -24,9 +33,10 @@ function sleep(time) {
 };
 
 class ClassicNotebookContext {
-    constructor(jupyter_context, path, verbose) {
+    constructor(jupyter_context, path, selectors, verbose) {
         this.jupyter_context = jupyter_context;
         this.path = path;
+        this.selectors = selectors;
         this.verbose = verbose || jupyter_context.verbose;
         this.page = null;
     };
@@ -56,10 +66,70 @@ class ClassicNotebookContext {
         return page;
     };
 
+    async restart_and_clear() {
+        await this.find_click_confirm(this.selectors.kernel_dropdown, this.selectors.restart_clear, this.selectors.confirm)
+    };
+
+    async restart_and_run_all() {
+        await this.find_click_confirm(this.selectors.kernel_dropdown, this.selectors.restart_run, this.selectors.confirm)
+    };
+
+    async find_click_confirm(tab_selector, button_selector, confirm_selector, sleep_time) {
+        sleep_time = sleep_time || 1000;
+        if (this.verbose) {
+            console.log("  click/confirm" + [tab_selector, button_selector, confirm_selector, sleep_time])
+        }
+        await this.find_and_click(tab_selector);
+        await this.wait_until_there(button_selector);
+        await this.find_and_click(button_selector);
+        await sleep(sleep_time);
+        if (await this.match_exists(confirm_selector)) {
+            if (this.verbose) {
+                console.log("  now confirming " + confirm_selector)
+            }
+            this.find_and_click(confirm_selector);
+        }
+        if (this.verbose) {
+            console.log("  clicked and confirmed " + [button_selector, confirm_selector]);
+        }
+        sleep(10000)
+    };
+
+    async find_and_click(selector) {
+        // alternate implementation...
+        if (this.verbose) {
+            console.log("  find and clicking " + selector)
+        }
+        var found = false;
+        var page = this.page;
+        while (!found) {
+            found = await page.evaluate(
+                async function(selector) {
+                    console.log("looking for '" + selector + "' in " + document);
+                    // document.querySelector("button.button-danger")
+                    var element = document.querySelector(selector);
+                    if (element) {
+                        console.log("element found " + element);
+                        element.click();
+                        return true;
+                    }
+                    console.log("no element for selector: " + selector);
+                    return false;
+                },
+                selector
+            );
+            if (!found) {
+                console.log("looking for " + selector);
+                //console.log("OUTPUT:: " + await page.evaluate(() => document.querySelectorAll("div .output")[2].innerHTML));
+                await sleep(2500);
+            }
+        }
+    };
+
     async wait_until_there(selector, substring, sleeptime) {
         // keep looking until the test timeout.
         // This implementation uses polling: fancier methods sometimes failed (??)
-        sleeptime = sleeptime || 1000
+        sleeptime = sleeptime || 2000;
         var found = false;
         while (!found) {
             console.log("looking in " + selector + " for " + substring);
