@@ -20,11 +20,6 @@ before_install:
 - npm update
 - conda install -c conda-forge jupyterlab=2.1.2
 - jupyter labextension install @jupyter-widgets/jupyterlab-manager
-#- jupyter labextension install ./js
-#- pip install git+https://github.com/aaronwatters/widget_cookie_cutter_test
-#- jupyter nbextension enable --py --sys-prefix widget_cookie_cutter_test
-#- jupyter labextension install ./js
-- cd end_to_end_testing
 install:
 - npm install
 script:
