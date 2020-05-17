@@ -209,6 +209,8 @@ class ClassicNotebookContext {
     };
 }
 
+const JUPYTER_URL_PATH = './_jupyter_url.txt';
+
 const RUN_JUPYTER_SERVER_PYTHON_SCRIPT = `
 
 # https://stackoverflow.com/questions/2804543/read-subprocess-stdout-line-by-line
@@ -216,7 +218,7 @@ const RUN_JUPYTER_SERVER_PYTHON_SCRIPT = `
 import subprocess
 import os
 
-JUPYTER_URL_PATH = './_jupyter_url.txt'
+JUPYTER_URL_PATH = '${JUPYTER_URL_PATH}'
 
 def run():
     cmd = ['jupyter', 'notebook', '--port=3000', '--no-browser']
@@ -246,6 +248,8 @@ if __name__=='__main__':
     run()
 `
 
+// Command to start a jupyter server and store the URL to a file.
+// Used with jest-puppeteer setup.
 const RUN_JUPYTER_SERVER_CMD = 
     `python -u -c "${RUN_JUPYTER_SERVER_PYTHON_SCRIPT}" > _jupyter_server_out.txt`;
 
@@ -254,4 +258,4 @@ exports.JupyterContext = JupyterContext;
 exports.sleep = sleep;
 exports.RUN_JUPYTER_SERVER_PYTHON_SCRIPT = RUN_JUPYTER_SERVER_PYTHON_SCRIPT;
 exports.RUN_JUPYTER_SERVER_CMD = RUN_JUPYTER_SERVER_CMD;
-
+exports.JUPYTER_URL_PATH = JUPYTER_URL_PATH;
