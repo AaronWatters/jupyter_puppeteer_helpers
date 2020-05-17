@@ -1,4 +1,10 @@
 
+'''
+Run a Jupyter server and save the token URL in a file.
+This script is left here for testing and maintenance.
+The script is available as a string constant in '../src/jp_helpers.js'.
+'''
+
 # https://stackoverflow.com/questions/2804543/read-subprocess-stdout-line-by-line
 
 import subprocess
