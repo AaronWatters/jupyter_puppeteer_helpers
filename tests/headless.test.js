@@ -100,6 +100,29 @@ describe("headless browser tests", async () => {
     120000, // timeout in 2 minutes...
     );
 
+    it("saves an example notebook",  async () => {
+        const path = "notebooks/notebook_tests/example.ipynb";
+        const initial_string = "here it is:";
+        var nb_context = await context.classic_notebook_context(path);
+        console.log("wait for the page to initialize... looking for " + initial_string);
+        await nb_context.wait_until_there(nb_context.selectors.container, initial_string);
+        var old_status = await nb_context.set_checkpoint_status("bogus status should be replaced");
+        await nb_context.save_and_checkpoint();
+        // loop until status changed or timeout
+        var new_status = old_status;
+        console.log("  save and checkpoint... old='" +old_status + "'");
+        while (new_status == old_status) {
+            await sleep(1000);
+            new_status = await nb_context.get_checkpoint_status();
+        }
+        console.log("  new status="+new_status);
+        expect(new_status).not.toEqual(old_status);
+        await nb_context.shut_down_notebook();
+        // success!
+        expect(true).toBeTruthy();
+    },
+    120000, // timeout in 2 minutes...
+    );
 
     async function jupyter_live_page(path) {
         // get a page for a notebook using path='notebooks/notebook_tests/example.ipynb'

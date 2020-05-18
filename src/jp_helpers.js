@@ -12,6 +12,7 @@ var classic_selectors = {
     kernel_dropdown: "#kernellink",
     file_menu: "#file_menu",
     close_halt: "#close_and_halt a",
+    save_checkpoint: "#save_checkpoint a",
     notification_kernel: "#notification_kernel",
 }
 
@@ -93,6 +94,18 @@ class ClassicNotebookContext {
 
     async restart_and_run_all() {
         await this.find_click_confirm(this.selectors.kernel_dropdown, this.selectors.restart_run, this.selectors.confirm, true)
+    };
+
+    async save_and_checkpoint() {
+        await this.find_click_confirm(this.selectors.file_menu, this.selectors.save_checkpoint, this.selectors.confirm, false)
+    };
+
+    async get_checkpoint_status() {
+        return await this.get_attribute("span.checkpoint_status", "title");
+    };
+
+    async set_checkpoint_status(value) {
+        return await this.set_attribute("span.checkpoint_status", "title", value);
     };
 
     async find_click_confirm(tab_selector, button_selector, confirm_selector, notification_wait, sleep_time) {
@@ -244,19 +257,43 @@ class ClassicNotebookContext {
         return true;
     };
 
+    async set_attribute(selector, attribute_name, value) {
+        var page = await this.get_page();
+        var result = await page.evaluate(
+            async function(selector, attribute_name, value) {
+                var element = document.querySelector(selector);
+                if (!element) {
+                    return null;
+                }
+                element.setAttribute(attribute_name, value);
+                return element.getAttribute(attribute_name);
+            },
+            selector, attribute_name, value
+        );
+    };
+
+    async get_attribute(selector, attribute_name) {
+        var page = await this.get_page();
+        var result = await page.evaluate(
+            async function(selector, attribute_name) {
+                var element = document.querySelector(selector);
+                if (!element) {
+                    return null;
+                }
+                return element.getAttribute(attribute_name);
+            },
+            selector, attribute_name
+        );
+        if ((result === null) && this.verbose) {
+            console.log("  no element found for selector: '" + selector + "'");
+        } else if (this.verbose) {
+            console.log("   for " + selector + " found attribute " + attribute_name + " == '" + result + '"');
+        }
+        return result;
+    };
+
     async get_matches(selector, text_substring) {
         var page = await this.get_page();
-        //var verbose = this.verbose;
-        //var match_exists = await page.evaluate((selector) => !!document.querySelector(selector), selector);
-        //if (!match_exists) {
-        //    if (verbose) {
-        //        console.log("no match for selector " + selector);
-        //    }
-        //    return [];  // no selector match, no text match
-        //} 
-        //else if (!text_substring) {
-        //    return [""];   // no substring, and the selector was found,
-        //}
         // extracting text into puppeteer context.  Fancier matching in the browser sometimes didn't work (??)
         var texts = await page.$$eval(
             selector,
