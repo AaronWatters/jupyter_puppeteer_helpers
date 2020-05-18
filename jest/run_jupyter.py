@@ -9,10 +9,17 @@ The script is available as a string constant in '../src/jp_helpers.js'.
 
 import subprocess
 import os
+import signal
+
+proc = None
+cmd = None
 
 JUPYTER_URL_PATH = './_jupyter_url.txt';
 
 def run():
+    global proc, cmd
+    signal.signal(signal.SIGINT, exit_cleanly)
+    signal.signal(signal.SIGTERM, exit_cleanly)
     cmd = ['jupyter', 'notebook', '--port=3000', '--no-browser']
     print ('Starting jupyter server: ' + repr(cmd))
     proc = subprocess.Popen(cmd, stderr=subprocess.PIPE)
@@ -32,8 +39,13 @@ def run():
                     print ('Jupyter url emitted: ' + repr(sline))
                     print ('   saved to: ' + repr(JUPYTER_URL_PATH))
     finally:
-        print ('Stopping jupyter server', cmd)
-        proc.kill()
+        exit_cleanly()
+
+def exit_cleanly(*arguments):
+    print ('Stopping jupyter server', cmd)
+    proc.kill()
+    if os.path.exists(JUPYTER_URL_PATH):
+        print('removing', JUPYTER_URL_PATH)
         os.remove(JUPYTER_URL_PATH)
 
 if __name__=='__main__':
