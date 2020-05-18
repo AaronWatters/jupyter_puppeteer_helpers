@@ -10,7 +10,7 @@ The script is available as a string constant in '../src/jp_helpers.js'.
 import subprocess
 import os
 
-JUPYTER_URL_PATH = './_jupyter_url.txt'
+JUPYTER_URL_PATH = './_jupyter_url.txt';
 
 def run():
     cmd = ['jupyter', 'notebook', '--port=3000', '--no-browser']

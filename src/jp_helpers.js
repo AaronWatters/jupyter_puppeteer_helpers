@@ -77,20 +77,25 @@ class ClassicNotebookContext {
     };
 
     async shut_down_notebook() {
-        await this.find_click_confirm(this.selectors.file_menu, this.selectors.close_halt, this.selectors.confirm);
+        // don't wait for notification to clear
+        await this.find_click_confirm(this.selectors.file_menu, this.selectors.close_halt, this.selectors.confirm, false);
         //await this.wait_for_page_to_close();
-        await this.wait_until_there(this.selectors.notification_kernel, "No kernel");
+        return await this.wait_until_there(this.selectors.notification_kernel, "No kernel");
+    };
+
+    async wait_for_kernel_notification_to_go_away() {
+        return await this.wait_until_empty(this.selectors.notification_kernel)
     };
 
     async restart_and_clear() {
-        await this.find_click_confirm(this.selectors.kernel_dropdown, this.selectors.restart_clear, this.selectors.confirm)
+        await this.find_click_confirm(this.selectors.kernel_dropdown, this.selectors.restart_clear, this.selectors.confirm, true)
     };
 
     async restart_and_run_all() {
-        await this.find_click_confirm(this.selectors.kernel_dropdown, this.selectors.restart_run, this.selectors.confirm)
+        await this.find_click_confirm(this.selectors.kernel_dropdown, this.selectors.restart_run, this.selectors.confirm, true)
     };
 
-    async find_click_confirm(tab_selector, button_selector, confirm_selector, sleep_time) {
+    async find_click_confirm(tab_selector, button_selector, confirm_selector, notification_wait, sleep_time) {
         sleep_time = sleep_time || 1000;
         if (this.verbose) {
             console.log("  click/confirm" + [tab_selector, button_selector, confirm_selector, sleep_time])
@@ -99,11 +104,15 @@ class ClassicNotebookContext {
         await this.wait_until_there(button_selector);
         await this.find_and_click(button_selector);
         await sleep(sleep_time);
+        // sometimes the confirm button doesn't pop up?
         if (await this.match_exists(confirm_selector)) {
             if (this.verbose) {
                 console.log("  now confirming " + confirm_selector)
             }
-            this.find_and_click(confirm_selector);
+            await this.find_and_click(confirm_selector);
+        }
+        if (notification_wait) {
+            this.wait_for_kernel_notification_to_go_away();
         }
         if (this.verbose) {
             console.log("  clicked and confirmed " + [button_selector, confirm_selector]);
@@ -168,35 +177,37 @@ class ClassicNotebookContext {
                 await sleep(sleeptime)
             }
         };
-        return false;
+        return !found;
+    };
+
+    async wait_until_empty(selector, sleeptime) {
+        // keep looking until the test timeout.
+        // This implementation uses polling: fancier methods sometimes failed (??)
+        sleeptime = sleeptime || 1000
+        var empty = false;
+        while (!empty) {
+            console.log("looking for empty " + selector);
+            empty = await this.selection_empty(selector);
+            if (!empty) {
+                await sleep(sleeptime)
+            }
+        };
+        return empty;
     };
 
     async match_exists(selector, text_substring) {
-        var page = await this.get_page();
+        text_substring = text_substring || "";
         var verbose = this.verbose;
-        var match_exists = await page.evaluate((selector) => !!document.querySelector(selector), selector);
-        if (!match_exists) {
-            if (verbose) {
-                console.log("no match for selector " + selector);
-            }
-            return false;  // no selector match, no text match
-        } else if (!text_substring) {
-            return true;   // no substring, and the selector was found,
-        }
-        // extracting text into puppeteer context.  Fancier matching in the browser sometimes didn't work (??)
-        var texts = await page.$$eval(
-            selector,
-            (elements) => elements.map((el) => el.textContent),
-        );
+        var texts = await this.get_matches(selector, text_substring);
         var text_found = false;
         if (verbose) {
-            console.log("   looking for " + text_substring + " in " + texts.length);
+            console.log("   looking for '" + text_substring + "' in " + texts.length);
         }
         for (var i=0; i<texts.length; i++) {
             if (texts[i].includes(text_substring)) {
                 text_found = true;
                 if (verbose) {
-                    console.log("   found " + text_substring + " at index " + i);
+                    console.log("   found '" + text_substring + "' at index " + i);
                 }
             }
         }
@@ -206,6 +217,52 @@ class ClassicNotebookContext {
             console.log(texts[0]);
         }
         return text_found;
+    };
+
+    async selection_empty(selector) {
+        var verbose = this.verbose;
+        var texts = await this.get_matches(selector, "");
+        // selection must exist
+        if (!texts.length) {
+            if (verbose) {
+                console.log("no selector to be empty: " + selector)
+            }
+            return false;
+        }
+        for (var i=0; i<texts.length; i++) {
+            var text = texts[i].trim();
+            if (text) {
+                if (verbose) {
+                    console.log("found string in selecor: " + text);
+                }
+                return false;
+            }
+        }
+        if (verbose) {
+            console.log("selector has white content: " + selector);
+        }
+        return true;
+    };
+
+    async get_matches(selector, text_substring) {
+        var page = await this.get_page();
+        //var verbose = this.verbose;
+        //var match_exists = await page.evaluate((selector) => !!document.querySelector(selector), selector);
+        //if (!match_exists) {
+        //    if (verbose) {
+        //        console.log("no match for selector " + selector);
+        //    }
+        //    return [];  // no selector match, no text match
+        //} 
+        //else if (!text_substring) {
+        //    return [""];   // no substring, and the selector was found,
+        //}
+        // extracting text into puppeteer context.  Fancier matching in the browser sometimes didn't work (??)
+        var texts = await page.$$eval(
+            selector,
+            (elements) => elements.map((el) => el.textContent),
+        );
+        return texts;
     };
 }
 
