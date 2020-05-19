@@ -5,16 +5,29 @@ function jp_helpers_is_loaded() {
 }
 
 var classic_selectors = {
-    confirm: "div.modal-dialog button.btn-danger",
-    container: "#notebook-container",
-    restart_clear: "#restart_clear_output a",
-    restart_run: "#restart_run_all a",
-    kernel_dropdown: "#kernellink",
-    file_menu: "#file_menu",
-    close_halt: "#close_and_halt a",
-    save_checkpoint: "#save_checkpoint a",
-    notification_kernel: "#notification_kernel",
-}
+    confirm: {css: "div.modal-dialog button.btn-danger", str: ""},
+    container: {css: "#notebook-container", str: ""},
+    restart_clear: {css: "#restart_clear_output a", str: ""},
+    restart_run: {css: "#restart_run_all a", str: ""},
+    kernel_dropdown: {css: "#kernellink", str: ""},
+    file_menu: {css: "#file_menu", str: ""},
+    close_halt: {css: "#close_and_halt a", str: ""},
+    save_checkpoint: {css: "#save_checkpoint a", str: ""},
+    notification_kernel: {css: "#notification_kernel", str: ""},
+};
+
+var lab_selectors = {
+    confirm: {css: "div.modal-dialog button.btn-danger", str: ""},
+    container: {css: "#notebook-container", str: ""},
+    restart_clear: {css: "#restart_clear_output a", str: ""},
+    restart_run: {css: "#restart_run_all a", str: ""},
+    kernel_dropdown: {css: "#kernellink", str: ""},
+    file_menu: {css: "#file_menu", str: ""},
+    close_halt: {css: "#close_and_halt a", str: ""},
+    save_checkpoint: {css: "#save_checkpoint a", str: ""},
+    notification_kernel: {css: "#notification_kernel", str: ""},
+};
+
 
 class JupyterContext {
     constructor(url_with_token, browser, verbose) {
@@ -44,12 +57,19 @@ class ClassicNotebookContext {
         this.page = null;
     };
 
+    notebook_url(path) {
+        var url_token = this.jupyter_context.url_with_token;
+        var qualified_path = "notebooks/" + path;
+        return url_token.replace("?", qualified_path + "?");
+    };
+
     async get_page() {
         if (this.page) {
             return this.page;
         }
         var path = this.path;
-        var page_url = this.jupyter_context.url_with_token.replace("?", path + "?");
+        //var page_url = this.jupyter_context.url_with_token.replace("?", path + "?");
+        var page_url = this.notebook_url(path);
         const page = await this.jupyter_context.browser.newPage();
         // https://stackoverflow.com/questions/47539043/how-to-get-all-console-messages-with-puppeteer-including-errors-csp-violations
         page
@@ -79,25 +99,35 @@ class ClassicNotebookContext {
 
     async shut_down_notebook() {
         // don't wait for notification to clear
-        await this.find_click_confirm(this.selectors.file_menu, this.selectors.close_halt, this.selectors.confirm, false);
+        await this.find_click_confirm(this.selectors.file_menu.css, this.selectors.close_halt.css, this.selectors.confirm.css, false);
         //await this.wait_for_page_to_close();
-        return await this.wait_until_there(this.selectors.notification_kernel, "No kernel");
+        await this.wait_until_there(this.selectors.notification_kernel.css, "No kernel");
+        return true;
     };
 
     async wait_for_kernel_notification_to_go_away() {
-        return await this.wait_until_empty(this.selectors.notification_kernel)
+        return await this.wait_until_empty(this.selectors.notification_kernel.css)
     };
 
     async restart_and_clear() {
-        await this.find_click_confirm(this.selectors.kernel_dropdown, this.selectors.restart_clear, this.selectors.confirm, true)
+        await this.find_click_confirm(this.selectors.kernel_dropdown.css, this.selectors.restart_clear.css, this.selectors.confirm.css, true)
     };
 
     async restart_and_run_all() {
-        await this.find_click_confirm(this.selectors.kernel_dropdown, this.selectors.restart_run, this.selectors.confirm, true)
+        await this.find_click_confirm(this.selectors.kernel_dropdown.css, this.selectors.restart_run.css, this.selectors.confirm.css, true)
     };
 
     async save_and_checkpoint() {
-        await this.find_click_confirm(this.selectors.file_menu, this.selectors.save_checkpoint, this.selectors.confirm, false)
+        await this.find_click_confirm(this.selectors.file_menu.css, this.selectors.save_checkpoint.css, this.selectors.confirm.css, false)
+    };
+
+    async wait_for_contained_text(text) {
+        await this.wait_until_there(this.selectors.container.css, text);
+        return true;
+    }
+    async wait_for_contained_text_gone(text) {
+        await this.wait_until_gone(this.selectors.container.css, text);
+        return true;
     };
 
     async get_checkpoint_status() {
@@ -125,7 +155,7 @@ class ClassicNotebookContext {
             await this.find_and_click(confirm_selector);
         }
         if (notification_wait) {
-            this.wait_for_kernel_notification_to_go_away();
+            await this.wait_for_kernel_notification_to_go_away();
         }
         if (this.verbose) {
             console.log("  clicked and confirmed " + [button_selector, confirm_selector]);
