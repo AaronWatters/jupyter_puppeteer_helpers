@@ -18,7 +18,7 @@ var classic_selectors = {
 
 var lab_selectors = {
     confirm: {css: "div.modal-dialog button.btn-danger", str: ""},
-    container: {css: "#notebook-container", str: ""},
+    container: {css: "div.jp-Activity:not(.lm-mod-hidden) div.jp-Notebook", str: ""},
     restart_clear: {css: "#restart_clear_output a", str: ""},
     restart_run: {css: "#restart_run_all a", str: ""},
     kernel_dropdown: {css: "#kernellink", str: ""},

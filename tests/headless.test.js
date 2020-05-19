@@ -68,6 +68,19 @@ describe("headless browser tests", async () => {
         var sample_text = 'Some example text';
         var example_text_found = await nb_context.wait_for_contained_text(sample_text);
         expect(example_text_found).toBeTruthy();
+        await sleep(10000);
+    },
+    120000, // timeout in 2 minutes...
+    );
+
+    it("opens and closes an example notebook in lab",  async () => {
+        const path = "notebook_tests/example.ipynb";
+        var nb_context = await context.lab_notebook_context(path);
+        var title = await nb_context.page.title();
+        console.log("example.ipynb page title is: " + title);
+        var sample_text = 'Some example text';
+        var example_text_found = await nb_context.wait_for_contained_text(sample_text);
+        expect(example_text_found).toBeTruthy();
     },
     120000, // timeout in 2 minutes...
     );
