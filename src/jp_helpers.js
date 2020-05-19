@@ -40,6 +40,11 @@ class JupyterContext {
         await context.get_page();
         return context;
     };
+    async lab_notebook_context(path, verbose) {
+        var context = new LabNotebookContext(this, path, lab_selectors, verbose);
+        await context.get_page();
+        return context;
+    }
 };
 
 function sleep(time) {
@@ -162,20 +167,22 @@ class ClassicNotebookContext {
         }
     };
 
-    async find_and_click(selector) {
+    async find_and_click(selector, substring) {
+        // keep looking until the test times out.
         // alternate implementation...
+        substring = substring || "";
         if (this.verbose) {
-            console.log("  find and clicking " + selector)
+            console.log("  find and clicking " + [selector, substring])
         }
         var found = false;
         var page = this.page;
         while (!found) {
             found = await page.evaluate(
-                async function(selector) {
+                async function(selector, substring) {
                     console.log("looking for '" + selector + "' in " + document);
                     // document.querySelector("button.button-danger")
                     var element = document.querySelector(selector);
-                    if (element) {
+                    if (element && element.textContent.includes(substring)) {
                         console.log("element found " + element);
                         element.click();
                         return true;
@@ -183,7 +190,7 @@ class ClassicNotebookContext {
                     console.log("no element for selector: " + selector);
                     return false;
                 },
-                selector
+                selector, substring
             );
             if (!found) {
                 console.log("looking for " + selector);
@@ -331,7 +338,18 @@ class ClassicNotebookContext {
         );
         return texts;
     };
-}
+};
+
+class LabNotebookContext extends ClassicNotebookContext {
+    
+    notebook_url(path) {
+        var url_token = this.jupyter_context.url_with_token;
+        // https://jupyterlab.readthedocs.io/en/stable/user/urls.html
+        var qualified_path = "lab/tree/" + path;
+        return url_token.replace("?", qualified_path + "?");
+    };
+
+};
 
 const JUPYTER_URL_PATH = './_jupyter_url.txt';
 
