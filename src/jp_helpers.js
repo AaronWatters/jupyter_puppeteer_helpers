@@ -145,7 +145,7 @@ class BaseNotebookContext {
             console.log("  click/confirm" + [tab_selector.css, button_selector.css, confirm_selector.css, sleep_time])
         }
         await this.find_and_click(tab_selector.css, tab_selector.str);
-        await this.wait_until_there(button_selector.css);
+        await this.wait_until_there(button_selector.css, button_selector.str);
         await this.find_and_click(button_selector.css, button_selector.str);
         await sleep(sleep_time);
         // sometimes the confirm button doesn't pop up?
