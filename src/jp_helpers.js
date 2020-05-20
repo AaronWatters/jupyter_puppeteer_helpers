@@ -348,12 +348,14 @@ class ClassicNotebookContext extends BaseNotebookContext {
     async execute_string_in_kernel(code_string) {
         // execute the string as Python (or Julia, etc) code in the Python (or Julia etc) kernel process
         var page = this.page;
-        return await page.evaluate(
+        var result = await page.evaluate(
             async function(code_string) {
                 IPython.notebook.kernel.execute(code_string)
             },
             code_string
         );
+        await this.wait_for_kernel_notification_to_go_away();
+        return result;
     };
 
     async restart_and_run_all() {
@@ -366,6 +368,13 @@ class ClassicNotebookContext extends BaseNotebookContext {
     async restart_and_clear() {
         // Call notebook method directly
         var result = await this.call_notebook_method("restart_clear_output", {confirm: false});
+        await this.wait_for_kernel_notification_to_go_away();
+        return result;
+    }
+
+    async execute_all_cells() {
+        // Call notebook method directly
+        var result = await this.call_notebook_method("execute_all_cells", {confirm: false});
         await this.wait_for_kernel_notification_to_go_away();
         return result;
     };
