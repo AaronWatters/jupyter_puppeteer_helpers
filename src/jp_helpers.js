@@ -20,13 +20,13 @@ var classic_selectors = {
 var lab_selectors = {
     confirm: {css: "button.jp-mod-warn", str: ""},
     container: {css: "div.jp-Activity:not(.lm-mod-hidden) div.jp-Notebook", str: ""},
-    //restart_clear: {css: "#restart_clear_output a", str: ""},
-    //restart_run: {css: "#restart_run_all a", str: ""},
-    //kernel_dropdown: {css: "#kernellink", str: ""},
+    restart_clear: {css: "div.lm-Menu div.lm-Menu-itemLabel", str: "Restart Kernel and Run"}, 
+    restart_run: {css: "div.lm-Menu div.lm-Menu-itemLabel", str: "Restart Kernel and Run"}, 
+    kernel_dropdown: {css: "#jp-MainMenu div.lm-MenuBar-itemLabel", str: "Kernel"},
     file_menu: {css: "#jp-MainMenu div.lm-MenuBar-itemLabel", str: "File"},
     close_halt: {css: "div.lm-Menu div.lm-Menu-itemLabel", str: "Shutdown Notebook"}, 
     save_checkpoint: {css: "div.lm-Menu div.lm-Menu-itemLabel", str: "Save Notebook"},  // not "Save Notebook as"!
-    //notification_kernel: {css: "#notification_kernel", str: ""},
+    notification_kernel: {css: "div.jp-Activity:not(.lm-mod-hidden) div.jp-Toolbar-kernelStatus", str: ""},
     checkpoint_status: {css: "ul.lm-TabBar-content li.jp-mod-current", str: ""},
 };
 
@@ -199,6 +199,22 @@ class BaseNotebookContext {
                 await sleep(2500);
             }
         }
+    };
+
+    async wait_for_attribute(selector, name, substring, sleeptime) {
+        // keep looking until the test timeout.
+        // This implementation uses polling: fancier methods sometimes failed (??)
+        sleeptime = sleeptime || 2000;
+        var found = false;
+        while (!found) {
+            console.log("looking in " + selector + "." + name + " for " + substring);
+            var value = await this.get_attribute(selector, name);
+            found = value.includes(substring);
+            if (!found) {
+                await sleep(sleeptime)
+            }
+        }
+        return true;
     };
 
     async wait_until_there(selector, substring, sleeptime) {
@@ -404,6 +420,11 @@ class LabNotebookContext extends BaseNotebookContext {
         // https://jupyterlab.readthedocs.io/en/stable/user/urls.html
         var qualified_path = "lab/tree/" + path;
         return url_token.replace("?", qualified_path + "?");
+    };
+
+    async wait_for_kernel_notification_to_go_away() {
+        //return await this.wait_until_empty(this.selectors.notification_kernel.css)
+        return await this.wait_for_attribute(this.selectors.notification_kernel.css, "title", "Kernel Idle");
     };
 
     async find_and_click(selector, substring) {
