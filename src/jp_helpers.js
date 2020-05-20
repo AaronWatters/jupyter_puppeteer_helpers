@@ -144,16 +144,16 @@ class BaseNotebookContext {
         if (this.verbose) {
             console.log("  click/confirm" + [tab_selector.css, button_selector.css, confirm_selector.css, sleep_time])
         }
-        await this.find_and_click(tab_selector.css);
+        await this.find_and_click(tab_selector.css, tab_selector.str);
         await this.wait_until_there(button_selector.css);
-        await this.find_and_click(button_selector.css);
+        await this.find_and_click(button_selector.css, button_selector.str);
         await sleep(sleep_time);
         // sometimes the confirm button doesn't pop up?
         if (await this.match_exists(confirm_selector.css)) {
             if (this.verbose) {
                 console.log("  now confirming " + confirm_selector.css)
             }
-            await this.find_and_click(confirm_selector.css);
+            await this.find_and_click(confirm_selector.css, confirm_selector.str);
         }
         if (notification_wait) {
             await this.wait_for_kernel_notification_to_go_away();
