@@ -6,7 +6,10 @@ Some helpful code for controlling Jupyter from puppeteer using a headless browse
 
 Although the code does not depend on `jest` and `jest-puppeteer` this repository
 was primarily built to provide common tools for creating end-to-end tests for Jupyter
-widget implementations using `jest` as a testing engine.s
+widget implementations using `jest` with `puppeteer` as a testing engine.
+
+The module may also be helpful for automatically capturing (very many) images from notebook based visualizations
+in an automated manner, among other use cases.
 
 # Running the tests
 
