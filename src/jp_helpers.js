@@ -14,18 +14,20 @@ var classic_selectors = {
     close_halt: {css: "#close_and_halt a", str: ""},
     save_checkpoint: {css: "#save_checkpoint a", str: ""},
     notification_kernel: {css: "#notification_kernel", str: ""},
+    checkpoint_status: {css: "span.checkpoint_status", str: ""},
 };
 
 var lab_selectors = {
-    confirm: {css: "div.modal-dialog button.btn-danger", str: ""},
+    //confirm: {css: "div.modal-dialog button.btn-danger", str: ""},
     container: {css: "div.jp-Activity:not(.lm-mod-hidden) div.jp-Notebook", str: ""},
-    restart_clear: {css: "#restart_clear_output a", str: ""},
-    restart_run: {css: "#restart_run_all a", str: ""},
-    kernel_dropdown: {css: "#kernellink", str: ""},
-    file_menu: {css: "#file_menu", str: ""},
-    close_halt: {css: "#close_and_halt a", str: ""},
-    save_checkpoint: {css: "#save_checkpoint a", str: ""},
-    notification_kernel: {css: "#notification_kernel", str: ""},
+    //restart_clear: {css: "#restart_clear_output a", str: ""},
+    //restart_run: {css: "#restart_run_all a", str: ""},
+    //kernel_dropdown: {css: "#kernellink", str: ""},
+    file_menu: {css: "#jp-MainMenu div.lm-MenuBar-itemLabel", str: "File"},
+    //close_halt: {css: "#close_and_halt a", str: ""},
+    save_checkpoint: {css: "div.lm-Menu div.lm-Menu-itemLabel", str: "Save Notebook"},  // not "Save Notebook as"!
+    //notification_kernel: {css: "#notification_kernel", str: ""},
+    checkpoint_status: {css: "ul.lm-TabBar-content li.jp-mod-current", str: ""},
 };
 
 
@@ -53,19 +55,13 @@ function sleep(time) {
     });
 };
 
-class ClassicNotebookContext {
+class BaseNotebookContext {
     constructor(jupyter_context, path, selectors, verbose) {
         this.jupyter_context = jupyter_context;
         this.path = path;
         this.selectors = selectors;
         this.verbose = verbose || jupyter_context.verbose;
         this.page = null;
-    };
-
-    notebook_url(path) {
-        var url_token = this.jupyter_context.url_with_token;
-        var qualified_path = "notebooks/" + path;
-        return url_token.replace("?", qualified_path + "?");
     };
 
     async get_page() {
@@ -136,11 +132,11 @@ class ClassicNotebookContext {
     };
 
     async get_checkpoint_status() {
-        return await this.get_attribute("span.checkpoint_status", "title");
+        return await this.get_attribute(this.selectors.checkpoint_status.css, "title");
     };
 
     async set_checkpoint_status(value) {
-        return await this.set_attribute("span.checkpoint_status", "title", value);
+        return await this.set_attribute(this.selectors.checkpoint_status.css, "title", value);
     };
 
     async find_click_confirm(tab_selector, button_selector, confirm_selector, notification_wait, sleep_time) {
@@ -307,6 +303,7 @@ class ClassicNotebookContext {
             },
             selector, attribute_name, value
         );
+        return result;
     };
 
     async get_attribute(selector, attribute_name) {
@@ -340,7 +337,53 @@ class ClassicNotebookContext {
     };
 };
 
-class LabNotebookContext extends ClassicNotebookContext {
+class ClassicNotebookContext extends BaseNotebookContext {
+
+    notebook_url(path) {
+        var url_token = this.jupyter_context.url_with_token;
+        var qualified_path = "notebooks/" + path;
+        return url_token.replace("?", qualified_path + "?");
+    };
+
+    async execute_string_in_kernel(code_string) {
+        // execute the string as Python (or Julia, etc) code in the Python (or Julia etc) kernel process
+        var page = this.page;
+        return await page.evaluate(
+            async function(code_string) {
+                IPython.notebook.kernel.execute(code_string)
+            },
+            code_string
+        );
+    };
+
+    async restart_and_run_all() {
+        // Call notebook method directly
+        var result = await this.call_notebook_method("restart_run_all", {confirm: false});
+        await this.wait_for_kernel_notification_to_go_away();
+        return result;
+    };
+
+    async restart_and_clear() {
+        // Call notebook method directly
+        var result = await this.call_notebook_method("restart_clear_output", {confirm: false});
+        await this.wait_for_kernel_notification_to_go_away();
+        return result;
+    };
+
+    async call_notebook_method(method_name, options) {
+        // execute the string as Python code in the Python kernel process
+        options = options || {};
+        var page = this.page;
+        return await page.evaluate(
+            async function(method_name, options) {
+                IPython.notebook[method_name] (options);
+            },
+            method_name, options
+        );
+    };
+};
+
+class LabNotebookContext extends BaseNotebookContext {
     
     notebook_url(path) {
         var url_token = this.jupyter_context.url_with_token;
