@@ -18,7 +18,7 @@ var classic_selectors = {
 };
 
 var lab_selectors = {
-    //confirm: {css: "div.modal-dialog button.btn-danger", str: ""},
+    confirm: {css: "button.jp-mod-warn", str: ""},
     container: {css: "div.jp-Activity:not(.lm-mod-hidden) div.jp-Notebook", str: ""},
     //restart_clear: {css: "#restart_clear_output a", str: ""},
     //restart_run: {css: "#restart_run_all a", str: ""},
@@ -100,7 +100,7 @@ class BaseNotebookContext {
 
     async shut_down_notebook() {
         // don't wait for notification to clear
-        await this.find_click_confirm(this.selectors.file_menu.css, this.selectors.close_halt.css, this.selectors.confirm.css, false);
+        await this.find_click_confirm(this.selectors.file_menu, this.selectors.close_halt, this.selectors.confirm, false);
         //await this.wait_for_page_to_close();
         await this.wait_until_there(this.selectors.notification_kernel.css, "No kernel");
         return true;
@@ -111,15 +111,15 @@ class BaseNotebookContext {
     };
 
     async restart_and_clear() {
-        await this.find_click_confirm(this.selectors.kernel_dropdown.css, this.selectors.restart_clear.css, this.selectors.confirm.css, true)
+        await this.find_click_confirm(this.selectors.kernel_dropdown, this.selectors.restart_clear, this.selectors.confirm, true)
     };
 
     async restart_and_run_all() {
-        await this.find_click_confirm(this.selectors.kernel_dropdown.css, this.selectors.restart_run.css, this.selectors.confirm.css, true)
+        await this.find_click_confirm(this.selectors.kernel_dropdown, this.selectors.restart_run, this.selectors.confirm, true)
     };
 
     async save_and_checkpoint() {
-        await this.find_click_confirm(this.selectors.file_menu.css, this.selectors.save_checkpoint.css, this.selectors.confirm.css, false)
+        await this.find_click_confirm(this.selectors.file_menu, this.selectors.save_checkpoint, this.selectors.confirm, false)
     };
 
     async wait_for_contained_text(text) {
@@ -142,24 +142,24 @@ class BaseNotebookContext {
     async find_click_confirm(tab_selector, button_selector, confirm_selector, notification_wait, sleep_time) {
         sleep_time = sleep_time || 1000;
         if (this.verbose) {
-            console.log("  click/confirm" + [tab_selector, button_selector, confirm_selector, sleep_time])
+            console.log("  click/confirm" + [tab_selector.css, button_selector.css, confirm_selector.css, sleep_time])
         }
-        await this.find_and_click(tab_selector);
-        await this.wait_until_there(button_selector);
-        await this.find_and_click(button_selector);
+        await this.find_and_click(tab_selector.css);
+        await this.wait_until_there(button_selector.css);
+        await this.find_and_click(button_selector.css);
         await sleep(sleep_time);
         // sometimes the confirm button doesn't pop up?
-        if (await this.match_exists(confirm_selector)) {
+        if (await this.match_exists(confirm_selector.css)) {
             if (this.verbose) {
-                console.log("  now confirming " + confirm_selector)
+                console.log("  now confirming " + confirm_selector.css)
             }
-            await this.find_and_click(confirm_selector);
+            await this.find_and_click(confirm_selector.css);
         }
         if (notification_wait) {
             await this.wait_for_kernel_notification_to_go_away();
         }
         if (this.verbose) {
-            console.log("  clicked and confirmed " + [button_selector, confirm_selector]);
+            console.log("  clicked and confirmed " + [button_selector.css, confirm_selector.css]);
         }
     };
 
@@ -167,6 +167,9 @@ class BaseNotebookContext {
         // keep looking until the test times out.
         // alternate implementation...
         substring = substring || "";
+        if (!selector) {
+            throw new Error("selector is required " + selector);
+        }
         if (this.verbose) {
             console.log("  find and clicking " + [selector, substring])
         }
