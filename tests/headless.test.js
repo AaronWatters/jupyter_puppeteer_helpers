@@ -172,7 +172,7 @@ describe("headless browser tests", async () => {
     },
     120000, // timeout in 2 minutes...
     );
-/*
+
     it("saves an example notebook in lab",  async () => {
         const path = "notebook_tests/example.ipynb";
         const initial_string = "here it is:";
@@ -196,6 +196,6 @@ describe("headless browser tests", async () => {
         expect(true).toBeTruthy();
     },
     120000, // timeout in 2 minutes...
-    ); */
+    ); 
 
 });

@@ -24,7 +24,7 @@ var lab_selectors = {
     //restart_run: {css: "#restart_run_all a", str: ""},
     //kernel_dropdown: {css: "#kernellink", str: ""},
     file_menu: {css: "#jp-MainMenu div.lm-MenuBar-itemLabel", str: "File"},
-    //close_halt: {css: "#close_and_halt a", str: ""},
+    close_halt: {css: "div.lm-Menu div.lm-Menu-itemLabel", str: "Shutdown Notebook"}, 
     save_checkpoint: {css: "div.lm-Menu div.lm-Menu-itemLabel", str: "Save Notebook"},  // not "Save Notebook as"!
     //notification_kernel: {css: "#notification_kernel", str: ""},
     checkpoint_status: {css: "ul.lm-TabBar-content li.jp-mod-current", str: ""},
@@ -102,7 +102,9 @@ class BaseNotebookContext {
         // don't wait for notification to clear
         await this.find_click_confirm(this.selectors.file_menu, this.selectors.close_halt, this.selectors.confirm, false);
         //await this.wait_for_page_to_close();
-        await this.wait_until_there(this.selectors.notification_kernel.css, "No kernel");
+        // this doesn't work in Lab:
+        //await this.wait_until_there(this.selectors.notification_kernel.css, "No kernel");
+        await sleep(1000);
         return true;
     };
 
@@ -402,6 +404,47 @@ class LabNotebookContext extends BaseNotebookContext {
         // https://jupyterlab.readthedocs.io/en/stable/user/urls.html
         var qualified_path = "lab/tree/" + path;
         return url_token.replace("?", qualified_path + "?");
+    };
+
+    async find_and_click(selector, substring) {
+        // keep looking until the test times out.
+        // alternate implementation...
+        substring = substring || "";
+        if (!selector) {
+            throw new Error("selector is required " + selector);
+        }
+        if (this.verbose) {
+            console.log("  find and clicking " + [selector, substring])
+        }
+        var found = false;
+        var page = this.page;
+        while (!found) {
+            found = await page.evaluateHandle(
+                async function(selector, substring) {
+                    console.log("looking for '" + selector + "' in " + document);
+                    // document.querySelector("button.button-danger")
+                    var elements = document.querySelectorAll(selector);
+                    for (var i=0; i<elements.length; i++) {
+                        var element = elements[i];
+                        if (element && element.textContent.includes(substring)) {
+                            console.log("element found " + element);
+                            //element.click();
+                            return element;
+                        }
+                    }
+                    console.log("no element for selector: " + selector);
+                    return false;
+                },
+                selector, substring
+            );
+            if (!found) {
+                console.log("looking for " + selector);
+                //console.log("OUTPUT:: " + await page.evaluate(() => document.querySelectorAll("div .output")[2].innerHTML));
+                await sleep(2500);
+            }
+        }
+        console.log("  tring to click: " + found)
+        found.click();  // click the element handle?
     };
 
 };
