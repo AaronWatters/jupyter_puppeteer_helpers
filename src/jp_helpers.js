@@ -1,6 +1,6 @@
 "use strict";
 
-const LINK_BROWSER_LOGS = false;
+const LINK_BROWSER_LOGS = true;
 
 function jp_helpers_is_loaded() {
     return true;
