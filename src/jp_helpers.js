@@ -1,5 +1,7 @@
 "use strict";
 
+const LINK_BROWSER_LOGS = false;
+
 function jp_helpers_is_loaded() {
     return true;
 }
@@ -20,8 +22,8 @@ var classic_selectors = {
 var lab_selectors = {
     confirm: {css: "button.jp-mod-warn", str: ""},
     container: {css: "div.jp-Activity:not(.lm-mod-hidden) div.jp-Notebook", str: ""},
-    restart_clear: {css: "div.lm-Menu div.lm-Menu-itemLabel", str: "Restart Kernel and Run"}, 
-    restart_run: {css: "div.lm-Menu div.lm-Menu-itemLabel", str: "Restart Kernel and Run"}, 
+    restart_clear: {css: "div.lm-Menu div.lm-Menu-itemLabel", str: "Restart Kernel and Clear"}, 
+    restart_run: {css: "div.lm-Menu div.lm-Menu-itemLabel", str: "Restart Kernel and Run All"}, 
     kernel_dropdown: {css: "#jp-MainMenu div.lm-MenuBar-itemLabel", str: "Kernel"},
     file_menu: {css: "#jp-MainMenu div.lm-MenuBar-itemLabel", str: "File"},
     close_halt: {css: "div.lm-Menu div.lm-Menu-itemLabel", str: "Shutdown Notebook"}, 
@@ -73,14 +75,16 @@ class BaseNotebookContext {
         var page_url = this.notebook_url(path);
         const page = await this.jupyter_context.browser.newPage();
         // https://stackoverflow.com/questions/47539043/how-to-get-all-console-messages-with-puppeteer-including-errors-csp-violations
-        page
-            .on('console', message =>
-                console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`))
-            .on('pageerror', ({ message }) => console.log(message))
-            .on('response', response =>
-                console.log(`${response.status()} ${response.url()}`))
-            .on('requestfailed', request =>
-                console.log(`${request.failure().errorText} ${request.url()}`))
+        if (LINK_BROWSER_LOGS) {
+            page
+                .on('console', message =>
+                    console.log(`${message.type().substr(0, 3).toUpperCase()} ${message.text()}`))
+                .on('pageerror', ({ message }) => console.log(message))
+                .on('response', response =>
+                    console.log(`${response.status()} ${response.url()}`))
+                .on('requestfailed', request =>
+                    console.log(`${request.failure().errorText} ${request.url()}`));
+        }
         if (this.verbose) {
             console.log("  sending page to " + page_url);
         }
@@ -161,7 +165,7 @@ class BaseNotebookContext {
             await this.wait_for_kernel_notification_to_go_away();
         }
         if (this.verbose) {
-            console.log("  clicked and confirmed " + [button_selector.css, confirm_selector.css]);
+            console.log("  clicked and confirmed " + [button_selector.css, button_selector.str, confirm_selector.css]);
         }
     };
 
@@ -180,21 +184,21 @@ class BaseNotebookContext {
         while (!found) {
             found = await page.evaluate(
                 async function(selector, substring) {
-                    console.log("looking for '" + selector + "' in " + document);
+                    //console.log("looking for '" + selector + "' in " + document);
                     // document.querySelector("button.button-danger")
                     var element = document.querySelector(selector);
                     if (element && element.textContent.includes(substring)) {
-                        console.log("element found " + element);
+                        //console.log("element found " + element);
                         element.click();
                         return true;
                     }
-                    console.log("no element for selector: " + selector);
+                    //console.log("no element for selector: " + selector);
                     return false;
                 },
                 selector, substring
             );
             if (!found) {
-                console.log("looking for " + selector);
+                //console.log("looking for " + selector);
                 //console.log("OUTPUT:: " + await page.evaluate(() => document.querySelectorAll("div .output")[2].innerHTML));
                 await sleep(2500);
             }
@@ -207,7 +211,7 @@ class BaseNotebookContext {
         sleeptime = sleeptime || 2000;
         var found = false;
         while (!found) {
-            console.log("looking in " + selector + "." + name + " for " + substring);
+            //console.log("looking in " + selector + "." + name + " for " + substring);
             var value = await this.get_attribute(selector, name);
             found = value.includes(substring);
             if (!found) {
@@ -223,7 +227,7 @@ class BaseNotebookContext {
         sleeptime = sleeptime || 2000;
         var found = false;
         while (!found) {
-            console.log("looking in " + selector + " for " + substring);
+            //console.log("looking in " + selector + " for " + substring);
             found = await this.match_exists(selector, substring);
             if (!found) {
                 await sleep(sleeptime)
@@ -238,7 +242,7 @@ class BaseNotebookContext {
         sleeptime = sleeptime || 1000
         var found = true;
         while (found) {
-            console.log("looking in " + selector + " for absense of " + substring);
+            //console.log("looking in " + selector + " for absense of " + substring);
             found = await this.match_exists(selector, substring);
             if (found) {
                 await sleep(sleeptime)
@@ -253,7 +257,7 @@ class BaseNotebookContext {
         sleeptime = sleeptime || 1000
         var empty = false;
         while (!empty) {
-            console.log("looking for empty " + selector);
+            //console.log("looking for empty " + selector);
             empty = await this.selection_empty(selector);
             if (!empty) {
                 await sleep(sleeptime)
@@ -268,13 +272,13 @@ class BaseNotebookContext {
         var texts = await this.get_matches(selector, text_substring);
         var text_found = false;
         if (verbose) {
-            console.log("   looking for '" + text_substring + "' in " + texts.length);
+            //console.log("   looking for '" + text_substring + "' in " + texts.length);
         }
         for (var i=0; i<texts.length; i++) {
             if (texts[i].includes(text_substring)) {
                 text_found = true;
                 if (verbose) {
-                    console.log("   found '" + text_substring + "' at index " + i);
+                    //console.log("   found '" + text_substring + "' at index " + i);
                 }
             }
         }
@@ -292,7 +296,7 @@ class BaseNotebookContext {
         // selection must exist
         if (!texts.length) {
             if (verbose) {
-                console.log("no selector to be empty: " + selector)
+                //console.log("no selector to be empty: " + selector)
             }
             return false;
         }
@@ -300,13 +304,13 @@ class BaseNotebookContext {
             var text = texts[i].trim();
             if (text) {
                 if (verbose) {
-                    console.log("found string in selecor: " + text);
+                    //console.log("found string in selecor: " + text);
                 }
                 return false;
             }
         }
         if (verbose) {
-            console.log("selector has white content: " + selector);
+            //console.log("selector has white content: " + selector);
         }
         return true;
     };
@@ -340,9 +344,9 @@ class BaseNotebookContext {
             selector, attribute_name
         );
         if ((result === null) && this.verbose) {
-            console.log("  no element found for selector: '" + selector + "'");
+            //console.log("  no element found for selector: '" + selector + "'");
         } else if (this.verbose) {
-            console.log("   for " + selector + " found attribute " + attribute_name + " == '" + result + '"');
+            //console.log("   for " + selector + " found attribute " + attribute_name + " == '" + result + '"');
         }
         return result;
     };
@@ -435,20 +439,20 @@ class LabNotebookContext extends BaseNotebookContext {
             throw new Error("selector is required " + selector);
         }
         if (this.verbose) {
-            console.log("  find and clicking " + [selector, substring])
+            //console.log("  find and clicking " + [selector, substring])
         }
         var found = false;
         var page = this.page;
         while (!found) {
             found = await page.evaluateHandle(
                 async function(selector, substring) {
-                    console.log("looking for '" + selector + "' in " + document);
+                    //console.log("looking for '" + selector + "' in " + document);
                     // document.querySelector("button.button-danger")
                     var elements = document.querySelectorAll(selector);
                     for (var i=0; i<elements.length; i++) {
                         var element = elements[i];
                         if (element && element.textContent.includes(substring)) {
-                            console.log("element found " + element);
+                            //console.log("element found " + element);
                             //element.click();
                             return element;
                         }
@@ -459,7 +463,7 @@ class LabNotebookContext extends BaseNotebookContext {
                 selector, substring
             );
             if (!found) {
-                console.log("looking for " + selector);
+                //console.log("looking for " + selector);
                 //console.log("OUTPUT:: " + await page.evaluate(() => document.querySelectorAll("div .output")[2].innerHTML));
                 await sleep(2500);
             }

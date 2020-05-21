@@ -27,7 +27,7 @@ describe("headless browser tests", async () => {
     
     it("gets a page object",  async () => {
         const page = await browser.newPage();
-        console.log("page: " + page);
+        // console.log("page: " + page);
         expect(page).toBeTruthy();
     },
     120000, // timeout in 2 minutes...
@@ -53,7 +53,7 @@ describe("headless browser tests", async () => {
     it("finds a subdirectory on the notebooks index page",  async () => {
         var nb_context = await context.classic_notebook_context("");
         var title = await nb_context.page.title();
-        console.log("start url page title is: " + title);
+        // console.log("start url page title is: " + title);
         var directory_found = await nb_context.wait_until_there("span.item_name", "notebook_tests");
         expect(directory_found).toBeTruthy();
     },
@@ -98,7 +98,7 @@ describe("headless browser tests", async () => {
         await nb_context.wait_for_contained_text_gone(test_string);
         console.log("  restart and run all...");
         await nb_context.restart_and_run_all();
-        console.log("   sleep to allow events to clear... (???)")
+        //console.log("   sleep to allow events to clear... (???)")
         await sleep(200);
         console.log("Verify that secret_label appears in widget output");
         //await nb_context.wait_until_there(nb_context.selectors.container, secret_label);
@@ -113,7 +113,7 @@ describe("headless browser tests", async () => {
     },
     120000, // timeout in 2 minutes...
     );
-/*
+
     it("runs a widget in an example notebook in lab",  async () => {
         const path = "notebook_tests/example.ipynb";
         const test_string = "THIS IS THE SECRET TEST STRING";
@@ -142,7 +142,7 @@ describe("headless browser tests", async () => {
         expect(result).toBeTruthy();
     },
     120000, // timeout in 2 minutes...
-    );*/
+    );
 
     it("modifies the kernel state programatically",  async () => {
         const path = "notebook_tests/example.ipynb";
