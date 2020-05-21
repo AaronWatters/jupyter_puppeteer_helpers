@@ -285,7 +285,7 @@ class BaseNotebookContext {
         // debugging...
         if (verbose &&  !text_found) {
             console.log("   NOT FOUND");
-            console.log(texts[0]);
+            //console.log(texts[0]);
         }
         return text_found;
     };
